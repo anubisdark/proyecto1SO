@@ -1,0 +1,28 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  debian-gcc:
+    image: debian:latest
+    container_name: debian-gcc
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GCC_VERSION: "13.3.0"
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: ["tail", "-f", "/dev/null"]  # Mantiene el contenedor corriendo
+
+  gcc:
+    image: gcc:13.3.0
+    container_name: gcc-container
+    volumes:
+      - .:/workspace
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    command: ["tail", "-f", "/dev/null"]
