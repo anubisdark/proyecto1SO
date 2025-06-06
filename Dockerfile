@@ -1,23 +1,24 @@
 # Dockerfile
-FROM debian:latest
 
-# Argumento para la versión de GCC
-ARG GCC_VERSION=13.3.0
+FROM gcc:13.3.0
 
-# Actualizar el sistema e instalar las dependencias necesarias
+# Instalar OpenSSH
 RUN apt-get update && \
-    apt-get install -y wget build-essential && \
-    apt-get clean
+    apt-get install -y sudo openssh-server && \
+    mkdir -p /var/run/sshd
 
-# Descargar e instalar GCC
-RUN wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz && \
-    tar -xzf gcc-${GCC_VERSION}.tar.gz && \
-    cd gcc-${GCC_VERSION} && \
-    ./configure --enable-languages=c,c++ && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -rf gcc-${GCC_VERSION} gcc-${GCC_VERSION}.tar.gz
+# Crear usuario
+RUN useradd -m devuser && \
+    echo 'devuser:password' | chpasswd && \
+    usermod -aG sudo devuser
 
-# Comando por defecto
-CMD ["bash"]
+# Habilitar autenticación por contraseña
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Directorio de trabajo
+WORKDIR /workspace
+
+# Exponer puerto SSH
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
